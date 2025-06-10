@@ -1,13 +1,13 @@
-require('dotenv').config()
+require("dotenv").config();
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const express = require("express");
 const app = express();
 const cors = require("cors");
 const port = process.env.PORT || 3000;
-app.use(express());
+app.use(express.json());
 app.use(cors());
 
-const uri =process.env.CONNECT_MONGODB
+const uri = process.env.CONNECT_MONGODB;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -17,15 +17,13 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+//****************************** connect to DB and assign collection*********************************** */
+let servicesCollection;
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
-
-    app.get("/", (req, res) => {
-      res.send("HireNest server is Running!.....");
-    });
+    const database = client.db("hireNestDB");
+    servicesCollection = database.collection("services");
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -38,6 +36,25 @@ async function run() {
   }
 }
 run().catch(console.dir);
+
+//****************************** routing is start******************************************* */
+
+
+app.get("/", (req, res) => {
+  res.send("HireNest server is Running!.....");
+});
+app.post("/services",async(req,res)=>{
+  const doc=req.body;
+  // const result = await movies.insertOne(doc);
+  const result=await servicesCollection.insertOne(doc)
+  res.send(result)
+  // console.log(doc)
+})
+app.get("/services",async(req,res)=>{
+  const cursor=servicesCollection.find();
+  const result=await cursor.toArray()
+  res.send(result)
+})
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
