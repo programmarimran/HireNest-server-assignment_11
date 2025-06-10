@@ -44,8 +44,8 @@ app.get("/", (req, res) => {
   res.send("HireNest server is Running!.....");
 });
 app.post("/services",async(req,res)=>{
-  const doc=req.body;
-  // const result = await movies.insertOne(doc);
+  const doc=req?.body;
+  // console.log(doc)
   const result=await servicesCollection.insertOne(doc)
   res.send(result)
   // console.log(doc)
@@ -55,7 +55,11 @@ app.get("/services",async(req,res)=>{
   const result=await cursor.toArray()
   res.send(result)
 })
-
+app.get("/services/home",async(req,res)=>{
+  const cursor = servicesCollection.find().limit(6);
+const result=await cursor.toArray()
+res.send(result)
+})
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
