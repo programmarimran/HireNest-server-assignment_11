@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const cors = require("cors");
 const port = process.env.PORT || 3000;
@@ -39,27 +39,34 @@ run().catch(console.dir);
 
 //****************************** routing is start******************************************* */
 
-
 app.get("/", (req, res) => {
   res.send("HireNest server is Running!.....");
 });
-app.post("/services",async(req,res)=>{
-  const doc=req?.body;
-  // console.log(doc)
-  const result=await servicesCollection.insertOne(doc)
-  res.send(result)
-  // console.log(doc)
-})
-app.get("/services",async(req,res)=>{
-  const cursor=servicesCollection.find();
-  const result=await cursor.toArray()
-  res.send(result)
-})
-app.get("/services/home",async(req,res)=>{
+
+app.get("/services", async (req, res) => {
+  const cursor = servicesCollection.find();
+  const result = await cursor.toArray();
+  res.send(result);
+});
+
+app.get("/services/home", async (req, res) => {
   const cursor = servicesCollection.find().limit(6);
-const result=await cursor.toArray()
-res.send(result)
-})
+  const result = await cursor.toArray();
+  res.send(result);
+});
+app.get("/services/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id:new ObjectId(id) };
+  const result = await servicesCollection.findOne(query);
+  res.send(result);
+});
+app.post("/services", async (req, res) => {
+  const doc = req?.body;
+  // console.log(doc)
+  const result = await servicesCollection.insertOne(doc);
+  res.send(result);
+  // console.log(doc)
+});
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
