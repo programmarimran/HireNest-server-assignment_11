@@ -67,6 +67,14 @@ app.post("/services", async (req, res) => {
   const result = await servicesCollection.insertOne(doc);
   res.send(result);
 });
+///users/services specific user services related api
+app.get("/users/services",async(req,res)=>{
+  const email=req.query.email;
+  const query={"provider.email":email}
+  const result=await servicesCollection.find(query).toArray()
+  res.send(result)
+  // console.log(email)
+})
 //serviceBookings Related API
 app.post("/book-service",async(req,res)=>{
   const doc=req.body;
@@ -74,6 +82,7 @@ app.post("/book-service",async(req,res)=>{
   const result=await serviceBookingsCollection.insertOne(doc)
   res.send(result)
 })
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
