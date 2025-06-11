@@ -67,6 +67,18 @@ app.post("/services", async (req, res) => {
   const result = await servicesCollection.insertOne(doc);
   res.send(result);
 });
+app.put("/services/:id", async (req, res) => {
+  const updatedData = req.body;
+  const id = req.params.id;
+  const options = { upsert: true };
+  const filter = { _id: new ObjectId(id) };
+  const updateDoc = {
+    $set:updatedData,
+  };
+  const result = await servicesCollection.updateOne(filter, updateDoc, options);
+  res.send(result);
+});
+
 ///users/services specific user services related api
 app.get("/users/services", async (req, res) => {
   const email = req.query.email;
