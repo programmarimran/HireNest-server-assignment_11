@@ -25,7 +25,7 @@ async function run() {
   try {
     const database = client.db("hireNestDB");
     servicesCollection = database.collection("services");
-    serviceBookingsCollection=database.collection("serviceBookings")
+    serviceBookingsCollection = database.collection("serviceBookings");
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
@@ -68,20 +68,25 @@ app.post("/services", async (req, res) => {
   res.send(result);
 });
 ///users/services specific user services related api
-app.get("/users/services",async(req,res)=>{
-  const email=req.query.email;
-  const query={"provider.email":email}
-  const result=await servicesCollection.find(query).toArray()
-  res.send(result)
-  // console.log(email)
-})
+app.get("/users/services", async (req, res) => {
+  const email = req.query.email;
+  const query = { "provider.email": email };
+  const result = await servicesCollection.find(query).toArray();
+  res.send(result);
+});
+app.delete("/services/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await servicesCollection.deleteOne(query);
+  res.send(result);
+});
 //serviceBookings Related API
-app.post("/book-service",async(req,res)=>{
-  const doc=req.body;
-  
-  const result=await serviceBookingsCollection.insertOne(doc)
-  res.send(result)
-})
+app.post("/book-service", async (req, res) => {
+  const doc = req.body;
+
+  const result = await serviceBookingsCollection.insertOne(doc);
+  res.send(result);
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
