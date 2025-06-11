@@ -19,11 +19,13 @@ const client = new MongoClient(uri, {
 });
 //****************************** connect to DB and assign collection*********************************** */
 let servicesCollection;
+let serviceBookingsCollection;
 
 async function run() {
   try {
     const database = client.db("hireNestDB");
     servicesCollection = database.collection("services");
+    serviceBookingsCollection=database.collection("serviceBookings")
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
@@ -56,17 +58,22 @@ app.get("/services/home", async (req, res) => {
 });
 app.get("/services/:id", async (req, res) => {
   const id = req.params.id;
-  const query = { _id:new ObjectId(id) };
+  const query = { _id: new ObjectId(id) };
   const result = await servicesCollection.findOne(query);
   res.send(result);
 });
 app.post("/services", async (req, res) => {
   const doc = req?.body;
-  // console.log(doc)
   const result = await servicesCollection.insertOne(doc);
   res.send(result);
-  // console.log(doc)
 });
+//serviceBookings Related API
+app.post("/book-service",async(req,res)=>{
+  const doc=req.body;
+  
+  const result=await serviceBookingsCollection.insertOne(doc)
+  res.send(result)
+})
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
