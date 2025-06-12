@@ -73,7 +73,7 @@ app.put("/services/:id", async (req, res) => {
   const options = { upsert: true };
   const filter = { _id: new ObjectId(id) };
   const updateDoc = {
-    $set:updatedData,
+    $set: updatedData,
   };
   const result = await servicesCollection.updateOne(filter, updateDoc, options);
   res.send(result);
@@ -93,15 +93,38 @@ app.delete("/services/:id", async (req, res) => {
   res.send(result);
 });
 //serviceBookings Related API
-app.get("/users/booked/services",async(req,res)=>{
-  const email=req.query.email;
-  const query={"userEmail":email}
-  const result=await serviceBookingsCollection.find(query).toArray()
-  res.send(result)
-})
+app.get("/users/booked/services", async (req, res) => {
+  const email = req.query.email;
+  const query = { userEmail: email };
+  const result = await serviceBookingsCollection.find(query).toArray();
+  res.send(result);
+});
+app.get("/provider/booked-services", async (req, res) => {
+  const email = req.query.email;
+  const query = { providerEmail: email };
+  const result = await serviceBookingsCollection.find(query).toArray();
+  res.send(result);
+});
 app.post("/book-service", async (req, res) => {
   const doc = req.body;
   const result = await serviceBookingsCollection.insertOne(doc);
+  res.send(result);
+});
+app.patch("/book-service/:id", async (req, res) => {
+  const id = req.params.id;
+  const { serviceStatus } = req.body;
+
+  const filter = { _id: new ObjectId(id) };
+  const updateDoc = {
+    $set: { serviceStatus: serviceStatus },
+  };
+  const result = await serviceBookingsCollection.updateOne(filter, updateDoc);
+  res.send(result);
+});
+app.delete("/book-service/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await serviceBookingsCollection.deleteOne(query);
   res.send(result);
 });
 
