@@ -50,7 +50,21 @@ app.get("/services", async (req, res) => {
   const result = await cursor.toArray();
   res.send(result);
 });
-
+app.get("/search/services", async (req, res) => {
+  const search = req.query.search;
+  // console.log("Search query received:", search);
+  const query = {
+    $or: [
+      { serviceName: { $regex: search, $options: "i" } },
+      { "provider.email": { $regex: search, $options: "i" } },
+      { "provider.name": { $regex: search, $options: "i" } },
+      { serviceArea: { $regex: search, $options: "i" } },
+    ],
+  };
+  const result = await servicesCollection.find(query).toArray();
+  // console.log(search)
+  res.send(result);
+});
 app.get("/services/home", async (req, res) => {
   const cursor = servicesCollection.find().limit(6);
   const result = await cursor.toArray();
