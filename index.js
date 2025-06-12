@@ -93,9 +93,14 @@ app.delete("/services/:id", async (req, res) => {
   res.send(result);
 });
 //serviceBookings Related API
+app.get("/users/booked/services",async(req,res)=>{
+  const email=req.query.email;
+  const query={"userEmail":email}
+  const result=await serviceBookingsCollection.find(query).toArray()
+  res.send(result)
+})
 app.post("/book-service", async (req, res) => {
   const doc = req.body;
-
   const result = await serviceBookingsCollection.insertOne(doc);
   res.send(result);
 });
