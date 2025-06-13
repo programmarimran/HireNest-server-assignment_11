@@ -1,14 +1,24 @@
 require("dotenv").config();
 const express = require("express");
+const jwt = require("jsonwebtoken");
+var cookieParser = require("cookie-parser");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const cors = require("cors");
 const port = process.env.PORT || 3000;
 app.use(express.json());
-app.use(cors());
+// app.use(cors());
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  })
+);
+const SECRET = process.env.JWT_SECRET;
+const secureStatus = process.env.NODE_ENV === "production";
 
 const uri = process.env.CONNECT_MONGODB;
-
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -40,7 +50,13 @@ async function run() {
 run().catch(console.dir);
 
 //****************************** routing is start******************************************* */
-
+app.post("/jwt", async (req, res) => {
+  const { email } = req.body;
+  const user = { email };
+  const token = jwt.sign(user, SECRET, { expiresIn: "1h" });
+  res.cookie("token", token, { httpOnly: true, secure: secureStatus }); //production e status auto true hobe
+  res.send({ status: true });
+});
 app.get("/", (req, res) => {
   res.send("HireNest server is Running!.....");
 });
@@ -52,7 +68,7 @@ app.get("/services", async (req, res) => {
 });
 app.get("/search/services", async (req, res) => {
   const search = req.query.search;
-  // console.log("Search query received:", search);
+  // console.log("Search query received:", search);************************************************
   const query = {
     $or: [
       { serviceName: { $regex: search, $options: "i" } },
@@ -93,7 +109,7 @@ app.put("/services/:id", async (req, res) => {
   res.send(result);
 });
 
-///users/services specific user services related api
+///users/services specific user services related api************************************************
 app.get("/users/services", async (req, res) => {
   const email = req.query.email;
   const query = { "provider.email": email };
