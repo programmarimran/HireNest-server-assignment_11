@@ -17,8 +17,24 @@ app.use(
 );
 const SECRET = process.env.JWT_SECRET;
 const secureStatus = process.env.NODE_ENV === "production";
-
 const uri = process.env.CONNECT_MONGODB;
+//************Token Verify midleware*************** */
+const verifyToken = (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).send({ message: "Unauthorized: No token provided" });
+  }
+  jwt.verify(token, SECRET, (err, decoded) => {
+    if (err) {
+      return res
+        .status(403)
+        .send({ message: "Forbidden: Invalid or expired token" });
+    } else {
+      req.decoded = decoded;
+      next();
+    }
+  });
+};
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -30,13 +46,11 @@ const client = new MongoClient(uri, {
 //****************************** connect to DB and assign collection*********************************** */
 let servicesCollection;
 let serviceBookingsCollection;
-
 async function run() {
   try {
     const database = client.db("hireNestDB");
     servicesCollection = database.collection("services");
     serviceBookingsCollection = database.collection("serviceBookings");
-
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log(
@@ -48,8 +62,8 @@ async function run() {
   }
 }
 run().catch(console.dir);
-
 //****************************** routing is start******************************************* */
+//jwt token create and set cookie related api
 app.post("/jwt", async (req, res) => {
   const { email } = req.body;
   const user = { email };
@@ -57,18 +71,19 @@ app.post("/jwt", async (req, res) => {
   res.cookie("token", token, { httpOnly: true, secure: secureStatus }); //production e status auto true hobe
   res.send({ status: true });
 });
+// server running test korar jonno api
 app.get("/", (req, res) => {
   res.send("HireNest server is Running!.....");
 });
-
+//all services page er jonno api
 app.get("/services", async (req, res) => {
   const cursor = servicesCollection.find();
   const result = await cursor.toArray();
   res.send(result);
 });
+//search related api
 app.get("/search/services", async (req, res) => {
   const search = req.query.search;
-  // console.log("Search query received:", search);************************************************
   const query = {
     $or: [
       { serviceName: { $regex: search, $options: "i" } },
@@ -78,27 +93,36 @@ app.get("/search/services", async (req, res) => {
     ],
   };
   const result = await servicesCollection.find(query).toArray();
-  // console.log(search)
   res.send(result);
 });
+//home page er jonno api
 app.get("/services/home", async (req, res) => {
   const cursor = servicesCollection.find().limit(6);
   const result = await cursor.toArray();
   res.send(result);
 });
+//details page er jonno api
 app.get("/services/:id", async (req, res) => {
   const id = req.params.id;
   const query = { _id: new ObjectId(id) };
   const result = await servicesCollection.findOne(query);
   res.send(result);
 });
-app.post("/services", async (req, res) => {
+// add service er jonno api
+app.post("/services", verifyToken, async (req, res) => {
   const doc = req?.body;
+  if (req?.decoded?.email !== doc?.provider?.email) {
+    return res.status(403).send("Forbidden: Email mismatch.");
+  }
   const result = await servicesCollection.insertOne(doc);
   res.send(result);
 });
-app.put("/services/:id", async (req, res) => {
+//manage service er update related api
+app.put("/services/:id", verifyToken, async (req, res) => {
   const updatedData = req.body;
+  if (updatedData.userEmail !== req.decoded.email) {
+    return res.status(403).send("Forbidden: Email mismatch.");
+  }
   const id = req.params.id;
   const options = { upsert: true };
   const filter = { _id: new ObjectId(id) };
@@ -108,42 +132,57 @@ app.put("/services/:id", async (req, res) => {
   const result = await servicesCollection.updateOne(filter, updateDoc, options);
   res.send(result);
 });
-
-///users/services specific user services related api************************************************
+//manage service page er joono sokol document er api
 app.get("/users/services", async (req, res) => {
   const email = req.query.email;
   const query = { "provider.email": email };
   const result = await servicesCollection.find(query).toArray();
   res.send(result);
 });
+//manage service delete related api
 app.delete("/services/:id", async (req, res) => {
   const id = req.params.id;
   const query = { _id: new ObjectId(id) };
   const result = await servicesCollection.deleteOne(query);
   res.send(result);
 });
-//serviceBookings Related API
-app.get("/users/booked/services", async (req, res) => {
+//booked-service page er jonno api
+app.get("/users/booked/services", verifyToken, async (req, res) => {
   const email = req.query.email;
+  if (email !== req.decoded.email) {
+    return res.status(403).send("Forbidden: Email mismatch.");
+  }
   const query = { userEmail: email };
   const result = await serviceBookingsCollection.find(query).toArray();
   res.send(result);
 });
-app.get("/provider/booked-services", async (req, res) => {
+//serviceToDo page er jonno documents related api
+app.get("/provider/booked-services", verifyToken, async (req, res) => {
   const email = req.query.email;
+  if (email !== req.decoded.email) {
+    return res.status(403).send("Forbidden: Email mismatch.");
+  }
   const query = { providerEmail: email };
   const result = await serviceBookingsCollection.find(query).toArray();
   res.send(result);
 });
-app.post("/book-service", async (req, res) => {
+// details page theke service book kora related api
+app.post("/book-service", verifyToken, async (req, res) => {
   const doc = req.body;
+  if (doc.userEmail !== req.decoded.email) {
+    return res.status(403).send("Forbidden: Email mismatch.");
+  }
   const result = await serviceBookingsCollection.insertOne(doc);
   res.send(result);
 });
-app.patch("/book-service/:id", async (req, res) => {
+// serviceToDo page theke provider kortik status change related api
+app.patch("/book-service/:id", verifyToken, async (req, res) => {
+  const email = req.body.providerEmail;
+  if (email !== req.decoded.email) {
+    return res.status(403).send("Forbidden: Email mismatch.");
+  }
   const id = req.params.id;
   const { serviceStatus } = req.body;
-
   const filter = { _id: new ObjectId(id) };
   const updateDoc = {
     $set: { serviceStatus: serviceStatus },
@@ -151,13 +190,14 @@ app.patch("/book-service/:id", async (req, res) => {
   const result = await serviceBookingsCollection.updateOne(filter, updateDoc);
   res.send(result);
 });
+// book kora user OR service provide kora provicer kortik booked service delete kora related api
 app.delete("/book-service/:id", async (req, res) => {
   const id = req.params.id;
   const query = { _id: new ObjectId(id) };
   const result = await serviceBookingsCollection.deleteOne(query);
   res.send(result);
 });
-
+//Port test related status
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
