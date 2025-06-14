@@ -16,7 +16,6 @@ app.use(
   })
 );
 const SECRET = process.env.JWT_SECRET;
-const secureStatus = process.env.NODE_ENV === "production";
 const uri = process.env.CONNECT_MONGODB;
 //************Token Verify midleware*************** */
 const verifyToken = (req, res, next) => {
@@ -68,7 +67,11 @@ app.post("/jwt", async (req, res) => {
   const { email } = req.body;
   const user = { email };
   const token = jwt.sign(user, SECRET, { expiresIn: "1h" });
-  res.cookie("token", token, { httpOnly: true, secure: secureStatus }); //production e status auto true hobe
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  }); //production e status auto true hobe
   res.send({ status: true });
 });
 // server running test korar jonno api
@@ -133,8 +136,11 @@ app.put("/services/:id", verifyToken, async (req, res) => {
   res.send(result);
 });
 //manage service page er joono sokol document er api
-app.get("/users/services", async (req, res) => {
+app.get("/users/services", verifyToken, async (req, res) => {
   const email = req.query.email;
+  if (email !== req.decoded.email) {
+    return res.status(403).send("Forbidden: Email mismatch.");
+  }
   const query = { "provider.email": email };
   const result = await servicesCollection.find(query).toArray();
   res.send(result);
