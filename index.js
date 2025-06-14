@@ -62,7 +62,7 @@ async function run() {
 }
 run().catch(console.dir);
 //****************************** routing is start******************************************* */
-//jwt token create and set cookie related api
+// Login with jwt token create  and set cookie related api
 app.post("/jwt", async (req, res) => {
   const { email } = req.body;
   const user = { email };
@@ -72,7 +72,16 @@ app.post("/jwt", async (req, res) => {
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   }); //production e status auto true hobe
-  res.send({ status: true });
+  res.send({ status: true, message: "LogIn successful" });
+});
+// Logout with jwt token create and set cookie related api
+app.post("/logout", async (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
+  res.send({ status: true, message: "Logout successful" });
 });
 // server running test korar jonno api
 app.get("/", (req, res) => {
