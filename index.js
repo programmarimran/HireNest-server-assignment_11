@@ -64,7 +64,7 @@ run().catch(console.dir);
 //****************************** routing is start******************************************* */
 // Login with jwt token create  and set cookie related api
 app.post("/jwt", async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.body||{};
   const user = { email };
   const token = jwt.sign(user, SECRET, { expiresIn: "1h" });
   res.cookie("token", token, {
