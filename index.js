@@ -72,12 +72,19 @@ app.post("/jwt", async (req, res) => {
     return res.status(400).send({ message: "Email is required" });
   }
   const token = jwt.sign({ email }, SECRET, { expiresIn: "1d" });
-  // console.log(token)
+  // ****************************
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-  }); //production e status auto true hobe
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+  });
+  //***************************** */
+  // console.log(token)
+  // res.cookie("token", token, {
+  //   httpOnly: true,
+  //   secure: process.env.NODE_ENV === "production",
+  //   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  // }); //production e status auto true hobe
   res.send({ status: true, message: "LogIn successful" });
 });
 // Logout with jwt token create and set cookie related api
