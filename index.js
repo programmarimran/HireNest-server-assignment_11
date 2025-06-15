@@ -20,10 +20,12 @@ const uri = process.env.CONNECT_MONGODB;
 //************Token Verify midleware*************** */
 const verifyToken = (req, res, next) => {
   const token = req.cookies.token;
+  // console.log(token)
   if (!token) {
     return res.status(401).send({ message: "Unauthorized: No token provided" });
   }
   jwt.verify(token, SECRET, (err, decoded) => {
+    // console.log(decoded)
     if (err) {
       return res
         .status(403)
@@ -64,9 +66,13 @@ run().catch(console.dir);
 //****************************** routing is start******************************************* */
 // Login with jwt token create  and set cookie related api
 app.post("/jwt", async (req, res) => {
-  const { email } = req.body||{};
-  const user = { email };
-  const token = jwt.sign(user, SECRET, { expiresIn: "1h" });
+  const { email } = req.body;
+  // console.log("jwt token first email", email);
+  if (!email) {
+    return res.status(400).send({ message: "Email is required" });
+  }
+  const token = jwt.sign({ email }, SECRET, { expiresIn: "1d" });
+  // console.log(token)
   res.cookie("token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
