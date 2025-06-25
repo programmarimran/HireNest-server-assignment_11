@@ -5,7 +5,6 @@
 - 🌐 **Live Website:** [https://hire-nest-by-imran.web.app/](https://hire-nest-by-imran.web.app/)
 - 📦 **Client Repository:** [HireNest Client Repo](https://github.com/programmarimran/HireNest-client-assignment_11)
 - 🛠️ **Server Repository:** [HireNest Server Repo](https://github.com/programmarimran/HireNest-server-assignment_11)
-- 📄 **API Documentation:** *(Add link if available)*
 
 ---
 
@@ -78,7 +77,7 @@ NODE_ENV=development
 
 ```bash
 # 1. Clone the Repository
-git clone https://github.com/programmarimran/HireNest-server-assignment_11.git
+git clone [https://github.com/programmarimran/HireNest-server-assignment_11.git](https://github.com/programmarimran/HireNest-server-assignment_11.git)
 cd HireNest-server-assignment_11
 
 # 2. Install Dependencies
