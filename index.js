@@ -100,6 +100,25 @@ app.post("/logout", async (req, res) => {
 app.get("/", (req, res) => {
   res.send("HireNest server is Running!.....");
 });
+//count related api
+app.get("/service-count", async (req, res) => {
+  try {
+    const count = await servicesCollection.countDocuments();
+    res.send({ count });
+  } catch (error) {
+    res.status(500).send({ error: "Failed to get service booking count" });
+  }
+});
+app.get("/service-booking-count", async (req, res) => {
+  try {
+    const count = await serviceBookingsCollection.countDocuments();
+    res.send({ count });
+  } catch (error) {
+    res.status(500).send({ error: "Failed to get service booking count" });
+  }
+});
+
+
 //all services page er jonno api
 app.get("/services", async (req, res) => {
   const cursor = servicesCollection.find();
@@ -117,12 +136,15 @@ app.get("/search/services", async (req, res) => {
       { serviceArea: { $regex: search, $options: "i" } },
     ],
   };
-  const result = await servicesCollection.find(query).toArray();
+  const result = await servicesCollection
+    .find(query)
+    .sort({ _id: 1 })
+    .toArray();
   res.send(result);
 });
 //home page er jonno api
 app.get("/services/home", async (req, res) => {
-  const cursor = servicesCollection.find().limit(6);
+  const cursor = servicesCollection.find().limit(8);
   const result = await cursor.toArray();
   res.send(result);
 });
@@ -225,6 +247,7 @@ app.delete("/book-service/:id", async (req, res) => {
   const result = await serviceBookingsCollection.deleteOne(query);
   res.send(result);
 });
+
 //Port test related status
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
