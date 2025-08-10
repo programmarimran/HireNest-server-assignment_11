@@ -103,7 +103,7 @@ app.get("/", (req, res) => {
 //count related api
 app.get("/service-count", async (req, res) => {
   try {
-    const count = await servicesCollection.countDocuments();
+    const count = await servicesCollection.countDocuments(); //paisi
     res.send({ count });
   } catch (error) {
     res.status(500).send({ error: "Failed to get service booking count" });
@@ -118,13 +118,74 @@ app.get("/service-booking-count", async (req, res) => {
   }
 });
 
-
 //all services page er jonno api
 app.get("/services", async (req, res) => {
   const cursor = servicesCollection.find();
+
   const result = await cursor.toArray();
   res.send(result);
 });
+app.get("/services/public", async (req, res) => {
+  try {
+    let { page, limit,sort } = req.query;
+
+    page = parseInt(page) || 1;     // default page 1
+    limit = parseInt(limit) || 9;  // default 9 items per page
+
+    const skip = (page - 1) * limit;
+       // Sorting logic
+    let sortOption = {};
+    if (sort === "Ascending") {
+      sortOption = { price: 1 }; // Low to High
+    } else if (sort === "Descending") {
+      sortOption = { price: -1 }; // High to Low
+    } else {
+      sortOption = {}; // Default (no sorting)
+    }
+
+    const cursor = servicesCollection.find().sort(sortOption).skip(skip).limit(limit);
+
+    const result = await cursor.toArray();
+
+    // total count for frontend pagination info (optional but useful)
+    const totalCount = await servicesCollection.countDocuments();
+
+    res.send({
+      data: result,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Server Error" });
+  }
+});
+
+// app.get("/services/public", async (req, res) => {
+//   try {
+//     let { page, limit ,sort} = req.query;
+// console.log(sort)
+//     page = parseInt(page) || 1; // default page 1
+//     limit = parseInt(limit) || 9; // default 9 items per page
+
+//     const skip = (page - 1) * limit;
+
+//     const cursor = servicesCollection.find().skip(skip).limit(limit);
+
+//     const result = await cursor.toArray();
+
+//     res.send(result);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send({ message: "Server Error" });
+//   }
+// });
+// //filter per price asending decending
+// app.get("/filter/services", async (req, res) => {
+//   const { sort } = req.query;
+//   console.log(sort);
+// });
 //search related api
 app.get("/search/services", async (req, res) => {
   const search = req.query.search;
